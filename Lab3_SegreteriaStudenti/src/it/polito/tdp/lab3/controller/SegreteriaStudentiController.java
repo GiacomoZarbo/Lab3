@@ -70,33 +70,46 @@ public class SegreteriaStudentiController {
 		txtCognome.clear();
 		Corso corso = comboCorso.getValue();
 		Studente studente = null;
-		if (!txtMatricola.getText().isEmpty() && (corso == null || corso.getNome().compareTo(" ")==0)) {
-			try {
-				studente = model.getStudente(Integer.parseInt(txtMatricola.getText()));
-				if (studente == null)
-					txtResult.setText("Studente non trovato.");
-				else {
+		if (corso != null && corso.getNome().compareTo(" ") != 0 && txtMatricola.getText().isEmpty()) {
+			List<Studente> studenti = model.getStudentiPerCorso(corso);
+			for (Studente s : studenti)
+				txtResult.appendText(s.toString());
+			return;
+		}
+		try {
+			studente = model.getStudente(Integer.parseInt(txtMatricola.getText()));
+			if (!txtMatricola.getText().isEmpty() && (corso == null || corso.getNome().compareTo(" ") == 0)) {
+				if (studente != null) {
 					txtNome.setText(studente.getNome());
 					txtCognome.setText(studente.getCognome());
 					List<Corso> corsi = model.getCorsiPerStudente(studente);
 					for (Corso c : corsi)
 						txtResult.appendText(c.toString());
-				}
-			} catch (NumberFormatException nfe) {
-				txtResult.setText("Inserire solamente caratteri numerici nello slot matricola!");
-			}
-		} else if (corso != null && txtMatricola.getText().isEmpty()) {
-			List<Studente> studenti = model.getStudentiPerCorso(corso);
-			for (Studente s : studenti)
-				txtResult.appendText(s.toString());
-		} else if ((corso == null || corso.getNome().compareTo(" ")==0) && txtMatricola.getText().isEmpty())
-			txtResult.setText("Scrivere qualcosa.");
-		else
-			txtResult.setText("Tentativo non valido.");
+				} else
+					txtResult.setText("Studente non trovato.");
+			} else if ((corso != null && corso.getNome().compareTo(" ") != 0) && !txtMatricola.getText().isEmpty()) {
+				txtNome.setText(studente.getNome());
+				txtCognome.setText(studente.getCognome());
+				if (model.isStudenteIscrittoACorso(Integer.parseInt(txtMatricola.getText()), corso.getCodIns()))
+					txtResult.setText("" + studente.getNome() + " " + studente.getCognome() + " ("
+							+ studente.getMatricola() + ") è iscritto al corso di " + corso.getNome() + ".");
+				else
+					txtResult.setText("" + studente.getNome() + " " + studente.getCognome() + " ("
+							+ studente.getMatricola() + ") non è iscritto al corso di " + corso.getNome() + ".");
+			} else if ((corso == null || corso.getNome().compareTo(" ") == 0) && txtMatricola.getText().isEmpty())
+				txtResult.setText("Scrivere qualcosa.");
+			else
+				txtResult.setText("Tentativo non valido.");
+		} catch (NumberFormatException nfe) {
+			txtResult.setText("Errore!");
+		}
 	}
 
 	@FXML
 	void doCercaNome(ActionEvent event) {
+		txtNome.clear();
+		txtCognome.clear();
+		txtResult.clear();
 		Studente s = null;
 		if (txtMatricola.getText().isEmpty()) {
 			txtResult.setText("Inserire un numero di matricola.");
@@ -104,28 +117,38 @@ public class SegreteriaStudentiController {
 		}
 		try {
 			s = model.getStudente(Integer.parseInt(txtMatricola.getText()));
+			if (s != null) {
+				txtResult.clear();
+				txtNome.setText(s.getNome());
+				txtCognome.setText(s.getCognome());
+			} else
+				txtResult.setText("Studente non trovato.");
 		} catch (NumberFormatException nfe) {
 			txtResult.setText("Inserire solamente caratteri numerici nello slot matricola!");
 		}
-		if (s != null) {
-			txtResult.clear();
-			txtNome.setText(s.getNome());
-			txtCognome.setText(s.getCognome());
-		} else
-			txtResult.setText("Studente non trovato.");
 	}
 
 	@FXML
 	void doIscrivi(ActionEvent event) {
-		Studente s = null;
-		Corso c = null;
-		c = comboCorso.getValue();
+		txtResult.clear();
+		Studente studente = null;
 		try {
-			s = model.getStudente(Integer.parseInt(txtMatricola.getText()));
+			studente = model.getStudente(Integer.parseInt(txtMatricola.getText()));
+			if (studente == null)
+				txtResult.setText("Studente non trovato.");
 		} catch (NumberFormatException nfe) {
 			txtResult.setText("Inserire solamente caratteri numerici nello slot matricola!");
 		}
-
+		Corso corso = comboCorso.getValue();
+		if (corso != null && corso.getNome().compareTo(" ") != 0 && txtMatricola.getText() != null) {
+			if (!model.isStudenteIscrittoACorso(Integer.parseInt(txtMatricola.getText()), corso.getCodIns())) {
+				boolean b = model.iscriviStudenteACorso(studente.getMatricola(), corso.getCodIns());
+				if (b)
+					txtResult.setText("Studente iscritto con successo!");
+			} else
+				txtResult.setText("Studente già iscritto!");
+		} else
+			txtResult.setText("Tentativo non valido.");
 	}
 
 	@FXML
@@ -148,5 +171,6 @@ public class SegreteriaStudentiController {
 		assert btnIscrivi != null : "fx:id=\"btnIscrivi\" was not injected: check your FXML file 'SegreteriaStudenti.fxml'.";
 		assert txtResult != null : "fx:id=\"txtResult\" was not injected: check your FXML file 'SegreteriaStudenti.fxml'.";
 		assert btnReset != null : "fx:id=\"btnReset\" was not injected: check your FXML file 'SegreteriaStudenti.fxml'.";
+		txtResult.setStyle("-fx-font-family: monospace");
 	}
 }

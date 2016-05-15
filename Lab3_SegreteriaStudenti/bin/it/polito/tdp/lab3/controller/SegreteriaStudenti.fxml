@@ -56,7 +56,7 @@
                         <Insets />
                      </HBox.margin>
                   </TextField>
-                  <Button fx:id="btnCercaNome" mnemonicParsing="false" onAction="#doCercaNome" style="-fx-background-color: green; -fx-text-fill: white;" text="✔">
+                  <Button fx:id="btnCercaNome" mnemonicParsing="false" onAction="#doCercaNome" prefHeight="25.0" prefWidth="25.0" style="-fx-background-color: green; -fx-text-fill: white;" text="✔">
                      <HBox.margin>
                         <Insets />
                      </HBox.margin>
